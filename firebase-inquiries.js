@@ -1,9 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-functions.js";
 import { firebaseConfig } from "./firebase-config.js";
 const ready=!Object.values(firebaseConfig).some(v=>String(v).startsWith("REPLACE_"));
-const app=ready?initializeApp(firebaseConfig):null,db=app?getFirestore(app):null,functions=app?getFunctions(app,"asia-southeast1"):null;
+const app=ready?initializeApp(firebaseConfig):null,db=app?getFirestore(app):null;
 const t=key=>window.bahaduText?.(key)||key;
 const bookingCopy={
  en:{loading:"Checking available times…",choose:"Choose an available time",none:"No times available — choose another date",failed:"Availability unavailable — try again",loadError:"Could not load live availability. Please retry or contact us on WhatsApp.",sending:"Checking the slot and sending your request…",received:"Request received.",held:"Your slot is held for up to 24 hours while the atelier reviews it. It is not confirmed until you receive confirmation.",slotTaken:"This time has just been taken. Please choose another available slot.",expired:"This request has expired. Please choose another available time.",fallback:"Unable to request this slot. Please refresh availability and try again."},
@@ -18,30 +17,37 @@ else if(form&&status)status.textContent=t("formPending");
 
 const booking=document.getElementById("appointment-form"),bookingStatus=document.getElementById("booking-status");
 if(booking&&ready){
- const getSlots=httpsCallable(functions,"getAvailableSlots"),createBooking=httpsCallable(functions,"createAppointment");
- const date=booking.querySelector('[name="preferredDate"]'),time=booking.querySelector('[name="preferredTime"]'),mode=booking.querySelector('[name="appointmentMode"]');
- const initial=time.innerHTML;
- const localToday=()=>{const n=new Date();return new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10)};
- if(date)date.min=localToday();
- async function refreshSlots(){
-  time.innerHTML='<option value="">'+bm("loading")+'</option>';time.disabled=true;bookingStatus.textContent="";
-  if(!date.value){time.innerHTML=initial;time.disabled=false;return}
-  try{const result=await getSlots({date:date.value,appointmentMode:mode.value});const slots=result.data.slots||[];time.innerHTML='<option value="">'+bm("choose")+'</option>'+slots.map(s=>'<option value="'+s.time+'">'+s.label+' (Yangon time)</option>').join("");if(!slots.length)time.innerHTML='<option value="">'+bm("none")+'</option>';}
-  catch(err){console.error(err);time.innerHTML='<option value="">'+bm("failed")+'</option>';bookingStatus.textContent=bm("loadError")}
-  finally{time.disabled=false}
- }
- date?.addEventListener("change",refreshSlots);mode?.addEventListener("change",refreshSlots);
- window.setInterval(()=>{if(date.value&&!document.hidden)refreshSlots()},30000);
- document.addEventListener("visibilitychange",()=>{if(!document.hidden&&date.value)refreshSlots()});
+ const date=booking.querySelector('[name="preferredDate"]'),time=booking.querySelector('[name="preferredTime"]');
+ const today=()=>{const n=new Date();return new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+ if(date)date.min=today();
+ const fillTimes=()=>{
+  const selected=date.value,weekday=selected?new Date(selected+"T12:00:00").getDay():-1;
+  time.innerHTML='<option value="">'+bm("choose")+'</option>';
+  if(!selected){time.disabled=true;return}
+  if(weekday===0){time.innerHTML='<option value="">'+bm("none")+'</option>';time.disabled=true;return}
+  for(let h=9;h<17;h++){const v=String(h).padStart(2,"0")+":00";const opt=document.createElement("option");opt.value=v;opt.textContent=v+" (Yangon time)";time.append(opt)}
+  time.disabled=false;
+ };
+ date?.addEventListener("change",fillTimes);
  booking.addEventListener("submit",async e=>{
   e.preventDefault();if(!booking.reportValidity())return;
   const submit=booking.querySelector('button[type="submit"]');submit.disabled=true;bookingStatus.textContent=bm("sending");
   const fd=new FormData(booking);
   try{
-   const result=await createBooking({name:fd.get("name"),email:fd.get("email"),phone:fd.get("phone"),service:fd.get("service"),appointmentMode:fd.get("appointmentMode"),preferredDate:fd.get("preferredDate"),preferredTime:fd.get("preferredTime"),eventDate:fd.get("eventDate"),partySize:fd.get("partySize"),message:[fd.get("message"),fd.get("suitStyle")?"Selected look: "+fd.get("suitStyle"):""].filter(Boolean).join("\n\n")});
-   booking.reset();booking.querySelectorAll(".booking-stage").forEach((el,i)=>el.classList.toggle("is-active",i===0));document.getElementById("booking-step-label").textContent="01 / 02";document.getElementById("booking-progress-fill").style.width="50%";
-   time.innerHTML=initial;time.disabled=true;bookingStatus.textContent=bm("received")+" Reference: "+result.data.appointmentId+". "+bm("held");
-  }catch(err){console.error(err);bookingStatus.textContent=err.code==="functions/already-exists"?bm("slotTaken"):err.code==="functions/deadline-exceeded"?bm("expired"):err.message||bm("fallback");if(date.value)await refreshSlots();}
+   await addDoc(collection(db,"inquiries"),{
+    type:"appointment",status:"pending",readAt:null,
+    name:String(fd.get("name")||"").trim(),email:String(fd.get("email")||"").trim(),
+    phone:String(fd.get("phone")||"").trim(),service:String(fd.get("service")||"").trim(),
+    appointmentMode:String(fd.get("appointmentMode")||"").trim(),
+    preferredDate:String(fd.get("preferredDate")||"").trim(),preferredTime:String(fd.get("preferredTime")||"").trim(),
+    eventDate:String(fd.get("eventDate")||"").trim(),partySize:String(fd.get("partySize")||"1").trim(),
+    suitStyle:String(fd.get("suitStyle")||"").trim(),message:String(fd.get("message")||"").trim(),
+    createdAt:serverTimestamp()
+   });
+   booking.reset();booking.querySelectorAll(".booking-stage").forEach((el,i)=>el.classList.toggle("is-active",i===0));
+   document.getElementById("booking-step-label").textContent="01 / 02";document.getElementById("booking-progress-fill").style.width="50%";
+   fillTimes();bookingStatus.textContent=bm("received")+" "+bm("held");
+  }catch(err){console.error(err);bookingStatus.textContent=err.message||bm("fallback")}
   finally{submit.disabled=false}
  });
 }else if(booking&&bookingStatus)bookingStatus.textContent=t("formPending");
