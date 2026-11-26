@@ -9,7 +9,8 @@ if(!Object.values(firebaseConfig).some(v=>String(v).startsWith("REPLACE_"))){
    const c=snap.data(),set=(selector,value,html=false)=>{const el=document.querySelector(selector);if(el&&value)html?el.innerHTML=String(value).replace(/</g,"&lt;").replace(/\n/g,"<br>"):el.textContent=value};
    set(".hero .eyebrow",c.heroEyebrow);set(".hero h1",c.heroTitle);set(".hero .hero-copy",c.heroText);set(".intro-copy h2",c.introTitle);set(".intro-copy>p:not(.eyebrow)",c.introText);set(".story-content h2",c.storyTitle);set(".story-content>p:not(.eyebrow)",c.storyText);set(".collections .section-heading h2",c.collectionTitle);set(".collections .section-heading>p",c.collectionSide);set(".products .section-heading h2",c.productHeading);set(".products .section-heading>p",c.productIntro);
    if(c.heroImage)document.querySelector(".hero-image")?.style.setProperty("background-image","url("+JSON.stringify(c.heroImage)+")");
-   if(c.storyImage)document.querySelector(".story-photo")?.style.setProperty("background-image","url("+JSON.stringify(c.storyImage)+")");\n   ["collectionImage1","collectionImage2","collectionImage3"].forEach((k,i)=>{const el=document.querySelectorAll(".collection-image")[i];if(el&&c[k])el.style.backgroundImage="url("+JSON.stringify(c[k])+")"});
+   if(c.storyImage)document.querySelector(".story-photo")?.style.setProperty("background-image","url("+JSON.stringify(c.storyImage)+")");
+   ["collectionImage1","collectionImage2","collectionImage3"].forEach((k,i)=>{const el=document.querySelectorAll(".collection-image")[i];if(el&&c[k])el.style.backgroundImage="url("+JSON.stringify(c[k])+")"});
    ["journalImage1","journalImage2","journalImage3"].forEach((k,i)=>{const img=document.querySelectorAll(".portfolio-grid img")[i];if(img&&c[k])img.src=c[k]});
    if(c.pageTitle)document.title=c.pageTitle;
   }
