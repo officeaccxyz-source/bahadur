@@ -19,7 +19,7 @@ if(bookingForm){
  bookingForm.querySelector("[data-booking-back]")?.addEventListener("click",()=>showStage(0));
  const date=bookingForm.querySelector('[name="preferredDate"]');if(date){const now=new Date();date.min=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);}
 }
-document.querySelectorAll("[data-booking-service]").forEach(link=>link.addEventListener("click",()=>{const select=document.querySelector('#appointment-form [name="service"]');if(select)select.value=link.dataset.bookingService;}));
+document.querySelectorAll("[data-booking-service]").forEach(link=>link.addEventListener("click",()=>{const select=document.querySelector('#appointment-form [name="service"]');if(select)select.value=link.dataset.bookingService;else if(link.pathname.endsWith("booking.html"))link.href="booking.html?service="+encodeURIComponent(link.dataset.bookingService);}));
 
 /* Sticky header depth and standalone booking page preselection */
 const header=document.querySelector('.header');
