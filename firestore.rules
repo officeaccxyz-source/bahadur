@@ -56,6 +56,9 @@ service cloud.firestore {
   match /adminNotifications/{id} {
    allow read,create,update,delete: if isAdmin();
   }
+  match /expenses/{id} {
+   allow read,create,update,delete: if isAdmin();
+  }
   match /orders/{id} {
    allow read,create,update,delete: if isAdmin();
   }
