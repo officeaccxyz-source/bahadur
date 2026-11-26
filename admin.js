@@ -27,7 +27,17 @@ function startAdminLive(){
  if(stopInquiryLive)return;
  let first=true;
  stopInquiryLive=onSnapshot(collection(db,"inquiries"),snap=>{
-  if(first){first=false;return}
+  if(first){
+   first=false;
+   snap.docs.forEach(d=>{
+    const row={id:d.id,...d.data()};
+    if(!row.readAt || (isAppt(row)&&(row.status||"pending")==="pending")){
+     const noticeRef=doc(db,"adminNotifications",row.id);
+     getDoc(noticeRef).then(existing=>{if(!existing.exists())return setDoc(noticeRef,{sourceId:row.id,type:isAppt(row)?"appointment":"message",title:isAppt(row)?"New appointment request":"New customer message",body:(row.name||"Customer")+" · "+(row.service||"General enquiry"),createdAt:serverTimestamp(),readAt:null})}).catch(console.error);
+    }
+   });
+   return;
+  }
   let changed=false;
   snap.docChanges().forEach(change=>{
    const row={id:change.doc.id,...change.doc.data()};
