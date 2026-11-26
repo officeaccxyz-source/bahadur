@@ -30,3 +30,6 @@ const serviceParam=bookingParams.get('service');
 const suitParam=bookingParams.get('look');
 if(bookingForm&&serviceParam){const service=bookingForm.querySelector('[name="service"]');if(service)service.value=serviceParam;}
 if(bookingForm&&suitParam){const look=bookingForm.querySelector('[name="suitStyle"]');if(look)look.value=suitParam;document.querySelectorAll('[data-suit-choice]').forEach(card=>card.classList.toggle('is-selected',card.dataset.suitChoice===suitParam));}
+
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.addEventListener('pageshow', function () { if (!location.hash) window.scrollTo(0, 0); });
