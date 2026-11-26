@@ -1,5 +1,5 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,setPersistence,browserLocalPersistence}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import{getFunctions,httpsCallable}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-functions.js";
 import{getFirestore,collection,getDocs,query,orderBy,limit,doc,updateDoc}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import{firebaseConfig}from"./firebase-config.js";
@@ -8,12 +8,15 @@ const callList=httpsCallable(functions,"listAppointments"),updateStatus=httpsCal
 const loginCard=document.getElementById("login-card"),dashboard=document.getElementById("dashboard"),loginError=document.getElementById("login-error"),dashError=document.getElementById("dashboard-error"),list=document.getElementById("appointments");
 let rows=[],inquiries=[],filter="all",busy=false;
 const $=id=>document.getElementById(id);
-$("login-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;loginError.textContent="Signing in…";try{await signInWithEmailAndPassword(auth,f.get("email"),f.get("password"));loginError.textContent=""}catch(err){loginError.textContent=err.message}finally{btn.disabled=false}});
+$("login-form").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;loginError.textContent="Signing in…";try{await setPersistence(auth,browserLocalPersistence);await signInWithEmailAndPassword(auth,f.get("email"),f.get("password"));loginError.textContent=""}catch(err){loginError.textContent=err.message}finally{btn.disabled=false}});
 $("logout").addEventListener("click",()=>signOut(auth));
 $("refresh").addEventListener("click",load);
 document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{filter=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("is-active",x===b));render()}));
 ["admin-search","date-from","date-to"].forEach(id=>$(id).addEventListener("input",render));
-$("export-csv").addEventListener("click",exportCsv);\n$("refresh-inquiries").addEventListener("click",loadInquiries);\n$("inquiry-search").addEventListener("input",renderInquiries);\n$("inquiry-filter").addEventListener("change",renderInquiries);
+$("export-csv").addEventListener("click",exportCsv);
+$("refresh-inquiries").addEventListener("click",loadInquiries);
+$("inquiry-search").addEventListener("input",renderInquiries);
+$("inquiry-filter").addEventListener("change",renderInquiries);
 onAuthStateChanged(auth,async user=>{
  if(!user){loginCard.hidden=false;dashboard.hidden=true;$("logout").hidden=true;$("refresh").hidden=true;return}
  try{const token=await user.getIdTokenResult(true);if(token.claims.admin!==true){await signOut(auth);loginError.textContent="This account is not authorised as an administrator.";return}
