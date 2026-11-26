@@ -4,10 +4,17 @@ service cloud.firestore {
   function isAdmin(){return request.auth != null && request.auth.token.admin == true;}
   function validText(field,min,max){return request.resource.data[field] is string && request.resource.data[field].size()>=min && request.resource.data[field].size()<=max;}
   match /inquiries/{id} {
-   allow create: if request.resource.data.keys().hasOnly(['name','email','phone','service','message','preferredDate','preferredTime','createdAt'])
+   allow create: if request.resource.data.keys().hasOnly(['name','email','phone','service','message','preferredDate','preferredTime','createdAt','type','status','readAt','appointmentMode','eventDate','partySize','suitStyle'])
     && request.resource.data.keys().hasAll(['name','email','service','message','createdAt'])
     && validText('name',2,100) && validText('email',5,160) && validText('service',1,80) && validText('message',1,2000)
     && request.resource.data.createdAt==request.time
+    && (!('type' in request.resource.data)||request.resource.data.type=='appointment')
+    && (!('status' in request.resource.data)||request.resource.data.status=='pending')
+    && (!('readAt' in request.resource.data)||request.resource.data.readAt==null)
+    && (!('appointmentMode' in request.resource.data)||(request.resource.data.appointmentMode is string&&request.resource.data.appointmentMode.size()<=60))
+    && (!('eventDate' in request.resource.data)||(request.resource.data.eventDate is string&&request.resource.data.eventDate.size()<=10))
+    && (!('partySize' in request.resource.data)||(request.resource.data.partySize is string&&request.resource.data.partySize.size()<=10))
+    && (!('suitStyle' in request.resource.data)||(request.resource.data.suitStyle is string&&request.resource.data.suitStyle.size()<=80))
     && (!('phone' in request.resource.data)||(request.resource.data.phone is string&&request.resource.data.phone.size()<=40))
     && (!('preferredDate' in request.resource.data)||request.resource.data.preferredDate is string)
     && (!('preferredTime' in request.resource.data)||request.resource.data.preferredTime is string);
