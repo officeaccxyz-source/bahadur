@@ -7,7 +7,7 @@ let inquiries=[],products=[],activeTab="overview",busy=false;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const dateOf=v=>v?.toDate?v.toDate():v?new Date(v):null;
 const dateLabel=v=>{const d=dateOf(v);return d&&!Number.isNaN(d.getTime())?d.toLocaleString():"Date unavailable"};
-const isAppt=x=>x.type==="appointment";
+const isAppt=x=>x.type==="appointment";\nconst waPhone=v=>{let p=String(v||"").replace(/\\D/g,"");if(p.startsWith("0"))p="95"+p.slice(1);return p};
 function authError(e){const m={"auth/invalid-credential":"Email သို့မဟုတ် Password မမှန်ပါ။","auth/too-many-requests":"Login ကြိုးစားမှုများလွန်းပါသည်။ ခဏစောင့်ပါ။","auth/network-request-failed":"အင်တာနက်ချိတ်ဆက်မှုကို စစ်ဆေးပါ။","auth/unauthorized-domain":"Firebase Authorized domains တွင် Website domain ထည့်ရန်လိုပါသည်。"};return m[e.code]||e.message||"Login မအောင်မြင်ပါ။"}
 try{const saved=localStorage.getItem(REMEMBER_KEY);if(saved){$("admin-email").value=saved;$("remember-account").checked=true}}catch{}
 $("login-form").addEventListener("submit",async e=>{e.preventDefault();const b=e.currentTarget.querySelector('[type="submit"]');b.disabled=true;$("login-error").textContent="စစ်ဆေးနေပါသည်…";try{await setPersistence(auth,$("remember-account").checked?browserLocalPersistence:browserSessionPersistence);await signInWithEmailAndPassword(auth,$("admin-email").value.trim(),$("admin-password").value);if($("remember-account").checked)localStorage.setItem(REMEMBER_KEY,$("admin-email").value.trim());else localStorage.removeItem(REMEMBER_KEY)}catch(err){$("login-error").textContent=authError(err)}finally{b.disabled=false}});
