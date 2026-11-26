@@ -38,7 +38,7 @@ if(booking&&ready){
   const submit=booking.querySelector('button[type="submit"]');submit.disabled=true;bookingStatus.textContent=bm("sending");
   const fd=new FormData(booking);
   try{
-   const result=await createBooking({name:fd.get("name"),email:fd.get("email"),phone:fd.get("phone"),service:fd.get("service"),appointmentMode:fd.get("appointmentMode"),preferredDate:fd.get("preferredDate"),preferredTime:fd.get("preferredTime"),eventDate:fd.get("eventDate"),partySize:fd.get("partySize"),message:fd.get("message")});
+   const result=await createBooking({name:fd.get("name"),email:fd.get("email"),phone:fd.get("phone"),service:fd.get("service"),appointmentMode:fd.get("appointmentMode"),preferredDate:fd.get("preferredDate"),preferredTime:fd.get("preferredTime"),eventDate:fd.get("eventDate"),partySize:fd.get("partySize"),message:[fd.get("message"),fd.get("suitStyle")?"Selected look: "+fd.get("suitStyle"):""].filter(Boolean).join("\n\n")});
    booking.reset();booking.querySelectorAll(".booking-stage").forEach((el,i)=>el.classList.toggle("is-active",i===0));document.getElementById("booking-step-label").textContent="01 / 02";document.getElementById("booking-progress-fill").style.width="50%";
    time.innerHTML=initial;time.disabled=true;bookingStatus.textContent=bm("received")+" Reference: "+result.data.appointmentId+". "+bm("held");
   }catch(err){console.error(err);bookingStatus.textContent=err.code==="functions/already-exists"?bm("slotTaken"):err.code==="functions/deadline-exceeded"?bm("expired"):err.message||bm("fallback");if(date.value)await refreshSlots();}
