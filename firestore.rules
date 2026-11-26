@@ -1,32 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
-  function validText(field, min, max) {
-   return request.resource.data[field] is string
-    && request.resource.data[field].size() >= min
-    && request.resource.data[field].size() <= max;
-  }
+  function isAdmin(){return request.auth != null && request.auth.token.admin == true;}
+  function validText(field,min,max){return request.resource.data[field] is string && request.resource.data[field].size()>=min && request.resource.data[field].size()<=max;}
   match /inquiries/{id} {
    allow create: if request.resource.data.keys().hasOnly(['name','email','phone','service','message','preferredDate','preferredTime','createdAt'])
     && request.resource.data.keys().hasAll(['name','email','service','message','createdAt'])
-    && validText('name',2,100) && validText('email',5,160)
-    && validText('service',1,80) && validText('message',1,2000)
-    && request.resource.data.createdAt == request.time
-    && (!('phone' in request.resource.data) || (request.resource.data.phone is string && request.resource.data.phone.size() <= 40))
-    && (!('preferredDate' in request.resource.data) || request.resource.data.preferredDate is string)
-    && (!('preferredTime' in request.resource.data) || request.resource.data.preferredTime is string);
-   allow read, update, delete: if false;
+    && validText('name',2,100) && validText('email',5,160) && validText('service',1,80) && validText('message',1,2000)
+    && request.resource.data.createdAt==request.time
+    && (!('phone' in request.resource.data)||(request.resource.data.phone is string&&request.resource.data.phone.size()<=40))
+    && (!('preferredDate' in request.resource.data)||request.resource.data.preferredDate is string)
+    && (!('preferredTime' in request.resource.data)||request.resource.data.preferredTime is string);
+   allow read,update,delete: if isAdmin();
   }
-  match /appointmentRequests/{id} {
-   allow create: if request.resource.data.keys().hasOnly(['name','email','phone','service','appointmentMode','preferredDate','preferredTime','eventDate','partySize','message','status','createdAt'])
-    && request.resource.data.keys().hasAll(['name','email','phone','service','appointmentMode','preferredDate','preferredTime','partySize','message','status','createdAt'])
-    && validText('name',2,100) && validText('email',5,160) && validText('phone',6,40)
-    && validText('service',2,80) && validText('appointmentMode',5,60)
-    && validText('preferredDate',10,10) && validText('preferredTime',3,20)
-    && validText('partySize',1,10) && request.resource.data.message is string && request.resource.data.message.size() <= 1500
-    && request.resource.data.status == 'pending' && request.resource.data.createdAt == request.time
-    && (!('eventDate' in request.resource.data) || request.resource.data.eventDate is string);
-   allow read, update, delete: if false;
-  }
+  match /appointments/{id} {allow read: if isAdmin();allow write: if false;}
+  match /slotLocks/{id} {allow read,write: if false;}
+  match /bookingRateLimits/{id} {allow read,write: if false;}
+  match /mail/{id} {allow read,write: if false;}
+  match /appointmentRequests/{id} {allow read,write: if false;}
+  match /{document=**} {allow read,write: if false;}
  }
 }
