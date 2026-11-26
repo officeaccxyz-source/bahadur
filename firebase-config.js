@@ -1,9 +1,10 @@
 // Firebase public client configuration. Fill from Firebase Console > Project settings > General > Your apps.
 export const firebaseConfig = {
-  apiKey: "REPLACE_WITH_FIREBASE_WEB_API_KEY",
-  authDomain: "REPLACE_WITH_PROJECT.firebaseapp.com",
-  projectId: "REPLACE_WITH_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_PROJECT.appspot.com",
-  messagingSenderId: "REPLACE_WITH_SENDER_ID",
-  appId: "REPLACE_WITH_APP_ID"
+ apiKey: "AIzaSyAkKBTSjsxSvJjeUHJkg_IsYAoxWbK9oAw",
+  authDomain: "bahadur-9189b.firebaseapp.com",
+  projectId: "bahadur-9189b",
+  storageBucket: "bahadur-9189b.firebasestorage.app",
+  messagingSenderId: "896078326917",
+  appId: "1:896078326917:web:d3983837a9f1457918cdec",
+  measurementId: "G-ZBC1E0JVBS"
 };
