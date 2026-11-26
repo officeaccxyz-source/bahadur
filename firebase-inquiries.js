@@ -31,6 +31,8 @@ if(booking&&ready){
   finally{time.disabled=false}
  }
  date?.addEventListener("change",refreshSlots);mode?.addEventListener("change",refreshSlots);
+ window.setInterval(()=>{if(date.value&&!document.hidden)refreshSlots()},30000);
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&date.value)refreshSlots()});
  booking.addEventListener("submit",async e=>{
   e.preventDefault();if(!booking.reportValidity())return;
   const submit=booking.querySelector('button[type="submit"]');submit.disabled=true;bookingStatus.textContent=bm("sending");
