@@ -31,7 +31,7 @@ if(booking&&ready){
   try{
    const result=await createBooking({name:fd.get("name"),email:fd.get("email"),phone:fd.get("phone"),service:fd.get("service"),appointmentMode:fd.get("appointmentMode"),preferredDate:fd.get("preferredDate"),preferredTime:fd.get("preferredTime"),eventDate:fd.get("eventDate"),partySize:fd.get("partySize"),message:fd.get("message")});
    booking.reset();booking.querySelectorAll(".booking-stage").forEach((el,i)=>el.classList.toggle("is-active",i===0));document.getElementById("booking-step-label").textContent="01 / 02";document.getElementById("booking-progress-fill").style.width="50%";
-   time.innerHTML=initial;bookingStatus.textContent="Request received. Reference: "+result.data.appointmentId+". Your slot is held for up to 24 hours while the atelier reviews it. It is not confirmed until you receive confirmation.";
+   time.innerHTML=initial;time.disabled=true;bookingStatus.textContent="Request received. Reference: "+result.data.appointmentId+". Your slot is held for up to 24 hours while the atelier reviews it. It is not confirmed until you receive confirmation.";
   }catch(err){console.error(err);bookingStatus.textContent=err.message||"Unable to request this slot. Please refresh availability and try again.";if(date.value)await refreshSlots();}
   finally{submit.disabled=false}
  });
