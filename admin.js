@@ -3,7 +3,7 @@ import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,setPersiste
 import{getFirestore,collection,getDocs,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,serverTimestamp,onSnapshot}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import{firebaseConfig}from"./firebase-config.js";
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id),REMEMBER_KEY="bahadu_admin_email_v1";
-let inquiries=[],products=[],fabrics=[],orders=[],activeTab="overview",busy=false,stopInquiryLive=null,stopAdminNoticeLive=null;
+let inquiries=[],products=[],fabrics=[],orders=[],expenses=[],activeTab="overview",busy=false,stopInquiryLive=null,stopAdminNoticeLive=null;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const dateOf=v=>v?.toDate?v.toDate():v?new Date(v):null;
 const dateLabel=v=>{const d=dateOf(v);return d&&!Number.isNaN(d.getTime())?d.toLocaleString():"Date unavailable"};
@@ -21,7 +21,7 @@ document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()
 function showTab(name){activeTab=name;document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));document.querySelectorAll(".tab-content").forEach(s=>s.classList.toggle("hidden",s.id!=="tab-"+name));$("page-title").textContent=({overview:"Overview",messages:"Customer messages",appointments:"Appointments",editor:"Website editor",products:"Products",fabrics:"Fabrics & options",orders:"Orders & pricing",reports:"Financial reports"})[name]||"Overview"}
 $("refresh-all").addEventListener("click",refreshAll);$("refresh-messages").addEventListener("click",loadInquiries);$("refresh-appointments").addEventListener("click",loadInquiries);
 $("message-search").addEventListener("input",renderMessages);$("message-filter").addEventListener("change",renderMessages);$("appointment-search").addEventListener("input",renderAppointments);$("appointment-filter").addEventListener("change",renderAppointments);
-async function refreshAll(){if(busy)return;busy=true;$("refresh-all").disabled=true;try{await Promise.all([loadInquiries(),loadProducts(),loadFabrics(),loadContent()]);renderOverview()}catch(e){console.error(e)}finally{busy=false;$("refresh-all").disabled=false}}
+async function refreshAll(){if(busy)return;busy=true;$("refresh-all").disabled=true;try{await Promise.all([loadInquiries(),loadProducts(),loadFabrics(),loadContent(),loadExpenses()]);renderOverview()}catch(e){console.error(e)}finally{busy=false;$("refresh-all").disabled=false}}
 
 function startAdminLive(){
  if(stopInquiryLive)return;
@@ -104,6 +104,22 @@ function renderMessages(){
 
 $("order-search").addEventListener("input",renderOrders);
 ["order-quantity","order-unit-price","order-fabric-cost","order-labour-cost","order-discount","order-deposit"].forEach(id=>$(id).addEventListener("input",calculateOrder));
+async function loadExpenses(){
+ try{const snap=await getDocs(collection(db,"expenses"));expenses=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.expenseDate||"").localeCompare(String(a.expenseDate||"")));renderExpenses()}
+ catch(e){$("expense-notice").textContent="Expense စာရင်း မရယူနိုင်ပါ: "+e.message}
+}
+function renderExpenses(){
+ if(!$("expenses-list"))return;
+ $("expenses-list").innerHTML=expenses.slice(0,30).map(e=>'<article class="item"><div><h3>'+esc(e.category||"Expense")+' · '+money(e.amount)+'</h3><p>'+esc(e.expenseDate||"")+' · '+esc(e.vendor||"")+'</p><p>'+esc(e.note||"")+'</p></div><div class="item-actions"><button class="btn danger" data-expense-delete="'+esc(e.id)+'">Delete</button></div></article>').join("")||'<div class="empty">No expenses recorded yet.</div>';
+ $("expenses-list").querySelectorAll("[data-expense-delete]").forEach(b=>b.addEventListener("click",async()=>{if(!confirm("ဒီ Expense မှတ်တမ်းကို ဖျက်မလား?"))return;b.disabled=true;try{await deleteDoc(doc(db,"expenses",b.dataset.expenseDelete));expenses=expenses.filter(e=>e.id!==b.dataset.expenseDelete);renderExpenses()}catch(e){$("expense-notice").textContent="ဖျက်မရပါ: "+e.message;b.disabled=false}}));
+}
+const expenseForm=$("expense-form");
+const nowForDate=new Date();expenseForm.elements.expenseDate.value=[nowForDate.getFullYear(),String(nowForDate.getMonth()+1).padStart(2,"0"),String(nowForDate.getDate()).padStart(2,"0")].join("-");
+expenseForm.addEventListener("submit",async e=>{
+ e.preventDefault();const b=expenseForm.querySelector('[type="submit"]'),d={expenseDate:expenseForm.elements.expenseDate.value,category:expenseForm.elements.category.value,amount:Math.max(0,Number(expenseForm.elements.amount.value)||0),vendor:expenseForm.elements.vendor.value.trim(),note:expenseForm.elements.note.value.trim(),createdAt:serverTimestamp()};
+ if(!d.expenseDate||d.amount<=0){$("expense-notice").textContent="ရက်စွဲနဲ့ Amount ကို မှန်ကန်စွာ ဖြည့်ပါ။";return}
+ b.disabled=true;try{const ref=await addDoc(collection(db,"expenses"),d);expenses.unshift({id:ref.id,...d,createdAt:new Date()});renderExpenses();expenseForm.elements.amount.value="";expenseForm.elements.vendor.value="";expenseForm.elements.note.value="";$("expense-notice").textContent="Expense သိမ်းဆည်းပြီးပါပြီ။"}catch(err){$("expense-notice").textContent="Expense မသိမ်းနိုင်ပါ: "+err.message}finally{b.disabled=false}
+});
 function makeVoucherCode(prefix){
  const d=new Date(),yy=String(d.getFullYear()).slice(-2),mm=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");
  const rand=()=>Math.random().toString(36).slice(2,6).toUpperCase();
@@ -127,7 +143,7 @@ function reportDateRange(){
 }
 async function generateFinancialReport(){
  const {start,end,label}=reportDateRange(),within=v=>{const d=dateOf(v);return d&&d>=start&&d<end};
- const os=orders.filter(o=>within(o.createdAt)),aps=inquiries.filter(isAppt).filter(a=>within(a.createdAt));
+ const os=orders.filter(o=>within(o.createdAt)),aps=inquiries.filter(isAppt).filter(a=>within(a.createdAt));const startKey=[start.getFullYear(),String(start.getMonth()+1).padStart(2,"0"),String(start.getDate()).padStart(2,"0")].join("-"),endKey=[end.getFullYear(),String(end.getMonth()+1).padStart(2,"0"),String(end.getDate()).padStart(2,"0")].join("-"),es=expenses.filter(e=>String(e.expenseDate||"")>=startKey&&String(e.expenseDate||"")<endKey),expenseTotal=es.reduce((n,e)=>n+Number(e.amount||0),0),netCash=deposit-expenseTotal;
  const total=os.reduce((n,o)=>n+Number(o.total||0),0),deposit=os.reduce((n,o)=>n+Number(o.deposit||0),0),balance=os.reduce((n,o)=>n+Number(o.balance??(Number(o.total||0)-Number(o.deposit||0))),0);
  const confirmed=aps.filter(a=>a.status==="confirmed").length,cancelled=aps.filter(a=>a.status==="cancelled").length,pending=aps.filter(a=>(a.status||"pending")==="pending").length;
  const c=document.createElement("canvas");c.width=1200;c.height=1500;const x=c.getContext("2d");
@@ -142,8 +158,8 @@ async function generateFinancialReport(){
  row("Orders recorded",String(os.length),590);row("Order value",money(total),675,true);row("Deposits received",money(deposit),765);row("Outstanding balances",money(balance),850,true);
  x.strokeStyle="#d8cdbb";x.beginPath();x.moveTo(125,910);x.lineTo(1075,910);x.stroke();
  x.fillStyle="#9a7843";x.font="bold 22px Arial";x.textAlign="left";x.fillText("APPOINTMENT REGISTER",125,985);
- row("Total requests",String(aps.length),1055);row("Confirmed",String(confirmed),1125);row("Pending",String(pending),1195);row("Cancelled",String(cancelled),1265);
- x.textAlign="center";x.fillStyle="#7a7469";x.font="20px Arial";x.fillText("Prepared for internal atelier records · Currency: MMK",600,1385);
+ row("Total requests",String(aps.length),1055);row("Confirmed",String(confirmed),1125);row("Pending",String(pending),1195);row("Cancelled",String(cancelled),1265);row("Recorded expenses",money(expenseTotal),1335);row("Net cash after recorded expenses",money(netCash),1390,true);
+ x.textAlign="center";x.fillStyle="#7a7469";x.font="17px Arial";x.fillText("Prepared for internal atelier records · Currency: MMK",600,1450);
  x.fillStyle="#9a7843";x.font="18px Arial";x.fillText("BAHADUR BESPOKE  ·  YANGON",600,1420);
  reportBlob=await new Promise(resolve=>c.toBlob(resolve,"image/png"));if(!reportBlob)throw new Error("Report image could not be created");
  if(reportUrl)URL.revokeObjectURL(reportUrl);reportUrl=URL.createObjectURL(reportBlob);
