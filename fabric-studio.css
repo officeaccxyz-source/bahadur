@@ -26,3 +26,13 @@
 .cloth-note{margin-top:34px;border-left:3px solid #b99b65;padding:18px 22px;background:#efebe2;font-size:11px}
 @media(max-width:900px){.cloth-header{flex-wrap:wrap;gap:10px}.cloth-header nav{order:3;width:100%;justify-content:center;padding-top:8px;border-top:1px solid #e9e2d7}.cloth-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.cloth-header{padding:9px 14px}.account-brand img{max-width:118px}.cloth-header nav{gap:8px}.cloth-header nav a{font-size:9px;padding:9px 8px}.cloth-language button{padding:7px 8px}.cloth-hero{min-height:370px;padding:70px 7% 55px}.cloth-library{padding:45px 5% 65px}.cloth-grid{grid-template-columns:1fr;gap:16px}.cloth-swatch{aspect-ratio:1.3/1}.cloth-toolbar{display:block}.cloth-filters{margin-top:18px}.cloth-card p{min-height:0}}
+
+/* Critical fix: constrain the source logo to the navigation bar */
+.cloth-header{box-sizing:border-box;width:100%;height:auto;min-height:82px;max-height:110px;overflow:visible;flex-wrap:nowrap;align-items:center}
+.cloth-header .account-brand{display:flex;flex:0 0 168px;width:168px;max-width:168px;height:68px;min-width:0;align-items:center;justify-content:flex-start;overflow:hidden}
+.cloth-header .account-brand img{display:block!important;width:100%!important;height:100%!important;max-width:168px!important;max-height:68px!important;min-width:0!important;object-fit:contain!important;object-position:left center}
+.cloth-header nav{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;gap:clamp(12px,2vw,28px);padding:0!important;border:0!important}
+.cloth-header nav a{white-space:nowrap}
+.cloth-header .cloth-language{flex:0 0 auto}
+@media(max-width:900px){.cloth-header{max-height:none;min-height:76px;flex-wrap:wrap}.cloth-header .account-brand{flex-basis:145px;width:145px;height:58px}.cloth-header .account-brand img{max-width:145px!important;max-height:58px!important}.cloth-header nav{order:3;flex:1 0 100%;justify-content:center;padding:9px 0 2px!important;border-top:1px solid #e9e2d7!important}.cloth-header .cloth-language{margin-left:auto}}
+@media(max-width:560px){.cloth-header .account-brand{flex-basis:120px;width:120px;height:50px}.cloth-header .account-brand img{max-width:120px!important;max-height:50px!important}}
