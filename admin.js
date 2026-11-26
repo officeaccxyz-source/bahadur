@@ -3,7 +3,7 @@ import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,setPersiste
 import{getFirestore,collection,getDocs,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,serverTimestamp,onSnapshot}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import{firebaseConfig}from"./firebase-config.js";
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id),REMEMBER_KEY="bahadu_admin_email_v1";
-let inquiries=[],products=[],fabrics=[],orders=[],expenses=[],calculations=[],activeTab="overview",busy=false,stopInquiryLive=null,stopAdminNoticeLive=null;
+let inquiries=[],products=[],fabrics=[],orders=[],expenses=[],calculations=[],measurements=[],activeTab="overview",busy=false,stopInquiryLive=null,stopAdminNoticeLive=null;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const dateOf=v=>v?.toDate?v.toDate():v?new Date(v):null;
 const dateLabel=v=>{const d=dateOf(v);return d&&!Number.isNaN(d.getTime())?d.toLocaleString():"Date unavailable"};
@@ -18,10 +18,10 @@ async function verifyAdminAccess(user){const token=await user.getIdTokenResult(t
 $("refresh-admin-access").addEventListener("click",async()=>{const user=auth.currentUser;if(!user)return;$("login-error").textContent="Admin permission ကို ပြန်စစ်နေပါသည်…";try{await verifyAdminAccess(user)}catch(e){$("login-error").textContent="စစ်ဆေးမရပါ: "+(e.message||e)}});
 onAuthStateChanged(auth,async user=>{if(!user){if(stopInquiryLive){stopInquiryLive();stopInquiryLive=null}if(stopAdminNoticeLive){stopAdminNoticeLive();stopAdminNoticeLive=null}$("app").classList.add("hidden");$("login-card").classList.remove("hidden");$("refresh-admin-access").classList.add("hidden");return}try{await verifyAdminAccess(user)}catch(e){$("login-card").classList.remove("hidden");$("app").classList.add("hidden");$("login-error").textContent="Admin စစ်ဆေးမှု မအောင်မြင်ပါ ("+(e.code||"")+"): "+e.message}});
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
-function showTab(name){activeTab=name;document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));document.querySelectorAll(".tab-content").forEach(s=>s.classList.toggle("hidden",s.id!=="tab-"+name));$("page-title").textContent=({overview:"Overview",messages:"Customer messages",appointments:"Appointments",editor:"Website editor",products:"Products",fabrics:"Fabrics & options",orders:"Orders & pricing",reports:"Financial reports"})[name]||"Overview"}
+function showTab(name){activeTab=name;document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));document.querySelectorAll(".tab-content").forEach(s=>s.classList.toggle("hidden",s.id!=="tab-"+name));$("page-title").textContent=({overview:"Overview",messages:"Customer messages",appointments:"Appointments",editor:"Website editor",products:"Products",fabrics:"Fabrics & options",orders:"Orders & pricing",reports:"Financial reports",measurements:"Customer measurements",measurements:"Customer measurements"})[name]||"Overview"}
 $("refresh-all").addEventListener("click",refreshAll);$("refresh-messages").addEventListener("click",loadInquiries);$("refresh-appointments").addEventListener("click",loadInquiries);
 $("message-search").addEventListener("input",renderMessages);$("message-filter").addEventListener("change",renderMessages);$("appointment-search").addEventListener("input",renderAppointments);$("appointment-filter").addEventListener("change",renderAppointments);
-async function refreshAll(){if(busy)return;busy=true;$("refresh-all").disabled=true;try{await Promise.all([loadInquiries(),loadProducts(),loadFabrics(),loadContent(),loadExpenses(),loadCalculations()]);renderOverview()}catch(e){console.error(e)}finally{busy=false;$("refresh-all").disabled=false}}
+async function refreshAll(){if(busy)return;busy=true;$("refresh-all").disabled=true;try{await Promise.all([loadInquiries(),loadProducts(),loadFabrics(),loadContent(),loadExpenses(),loadCalculations(),loadMeasurements()]);renderOverview()}catch(e){console.error(e)}finally{busy=false;$("refresh-all").disabled=false}}
 
 function startAdminLive(){
  if(stopInquiryLive)return;
@@ -121,6 +121,65 @@ expenseForm.addEventListener("submit",async e=>{
  if(!d.expenseDate||d.amount<=0){$("expense-notice").textContent="ရက်စွဲနဲ့ Amount ကို မှန်ကန်စွာ ဖြည့်ပါ။";return}
  b.disabled=true;try{const ref=await addDoc(collection(db,"expenses"),d);expenses.unshift({id:ref.id,...d,createdAt:new Date()});renderExpenses();expenseForm.elements.amount.value="";expenseForm.elements.vendor.value="";expenseForm.elements.note.value="";$("expense-notice").textContent="Expense သိမ်းဆည်းပြီးပါပြီ။"}catch(err){$("expense-notice").textContent="Expense မသိမ်းနိုင်ပါ: "+err.message}finally{b.disabled=false}
 });
+const measurementTemplates={
+ men:{
+  jacket:[["JACKET & BODY","neck","Neck","chest","Chest","waist","Waist","shoulder","Shoulder","sleeve","Sleeve length","bicep","Bicep","jacketLength","Jacket length","backLength","Back length"]],
+  trousers:[["TROUSERS","waist","Waist","seat","Seat / seat circumference","thigh","Thigh","knee","Knee","hem","Hem / bottom","frontRise","Front rise","backRise","Back rise","inseam","Inseam","outseam","Outseam"]],
+  shirt:[["SHIRT","neck","Neck","chest","Chest","waist","Waist","shoulder","Shoulder","sleeve","Sleeve length","cuff","Cuff","shirtLength","Shirt length"]],
+  skirt:[["LOWER GARMENT","waist","Waist","seat","Seat","skirtLength","Skirt length"]],
+  dress:[["GARMENT","chest","Chest","waist","Waist","seat","Seat","shoulder","Shoulder","sleeve","Sleeve","dressLength","Dress length"]],
+  suit:[["JACKET","neck","Neck","chest","Chest","waist","Waist","shoulder","Shoulder","sleeve","Sleeve length","jacketLength","Jacket length"],["TROUSERS","trouserWaist","Trouser waist","seat","Seat","thigh","Thigh","frontRise","Front rise","inseam","Inseam","outseam","Outseam"]]
+ },
+ women:{
+  jacket:[["JACKET & BODY","bust","Bust","underBust","Under bust","waist","Waist","highHip","High hip","fullHip","Full hip","shoulder","Shoulder","sleeve","Sleeve length","armhole","Armhole","jacketLength","Jacket length","frontLength","Front length","backLength","Back length"]],
+  trousers:[["TROUSERS","waist","Waist","highHip","High hip","fullHip","Full hip","thigh","Thigh","knee","Knee","frontRise","Front rise","backRise","Back rise","inseam","Inseam","outseam","Outseam"]],
+  shirt:[["SHIRT / BLOUSE","bust","Bust","underBust","Under bust","waist","Waist","shoulder","Shoulder","sleeve","Sleeve length","armhole","Armhole","cuff","Cuff","blouseLength","Blouse length"]],
+  skirt:[["SKIRT","waist","Waist","highHip","High hip","fullHip","Full hip","skirtLength","Skirt length"]],
+  dress:[["DRESS / GOWN","bust","Bust","underBust","Under bust","waist","Waist","highHip","High hip","fullHip","Full hip","shoulder","Shoulder","sleeve","Sleeve","armhole","Armhole","dressLength","Dress length"]],
+  suit:[["JACKET","bust","Bust","underBust","Under bust","waist","Waist","shoulder","Shoulder","sleeve","Sleeve","jacketLength","Jacket length"],["TROUSERS / SKIRT","highHip","High hip","fullHip","Full hip","thigh","Thigh","frontRise","Front rise","inseam","Inseam","outseam","Outseam"]]
+ }
+};
+function renderMeasurementFields(){
+ const gender=$("measurement-gender").value==="women"?"women":"men",type=$("measurement-garment").value,groups=measurementTemplates[gender][type]||measurementTemplates[gender].jacket,el=$("measurement-fields");
+ el.innerHTML=groups.map(g=>'<h3 class="measurement-grid-title">'+g[0]+'</h3>'+Array.from({length:(g.length-1)/2},(_,i)=>{const key=g[1+i*2],label=g[2+i*2];return '<div class="measurement-field"><label for="measure-'+key+'">'+label+'</label><input id="measure-'+key+'" type="number" min="0" max="300" step="0.1" data-measurement-key="'+key+'" inputmode="decimal" placeholder="—"></div>'}).join("")).join("");
+}
+function refreshMeasurementOptions(){
+ const s=$("order-measurement-source");if(!s)return;const prior=s.value;
+ s.innerHTML='<option value="">Select customer measurement</option>'+measurements.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.customerName)+' · '+esc(m.gender||"men")+' · '+esc(m.garmentType||"garment")+' · v'+esc(m.version||1)+'</option>').join("");
+ if(prior)s.value=prior;
+}
+async function loadMeasurements(){
+ try{const snap=await getDocs(collection(db,"measurements"));measurements=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(dateOf(b.createdAt)?.getTime()||0)-(dateOf(a.createdAt)?.getTime()||0));renderMeasurements();refreshMeasurementOptions()}
+ catch(e){$("measurements-error").textContent="Measurements မရယူနိုင်ပါ: "+e.message}
+}
+function renderMeasurements(){
+ const q=($("measurement-search")?.value||"").toLowerCase(),list=measurements.filter(m=>[m.customerName,m.phone,m.garmentType,m.gender].join(" ").toLowerCase().includes(q));
+ $("measurements-list").innerHTML=list.length?list.map(m=>'<article class="item"><div><p class="eyebrow">'+esc((m.gender||"men").toUpperCase())+' · '+esc(m.garmentType||"garment")+' · VERSION '+esc(m.version||1)+'</p><h3>'+esc(m.customerName)+'</h3><p>'+esc(m.phone||"No phone")+' · '+esc(m.unit||"cm")+' · '+esc(dateLabel(m.createdAt))+'</p><div class="measurement-data">'+Object.entries(m.values||{}).map(([k,v])=>'<span>'+esc(k)+': '+esc(v)+' '+esc(m.unit||"cm")+'</span>').join("")+'</div><p>'+esc(m.notes||"")+'</p></div><div class="item-actions"><button class="btn" data-use-measurement="'+esc(m.id)+'">Use in order</button></div></article>').join(""):'<div class="empty">No measurement profiles found.</div>';
+ $("measurements-list").querySelectorAll("[data-use-measurement]").forEach(b=>b.addEventListener("click",()=>useMeasurement(b.dataset.useMeasurement)));
+}
+function useMeasurement(id){
+ const m=measurements.find(x=>x.id===id);if(!m)return;
+ $("order-form").elements.customerName.value=m.customerName||"";$("order-form").elements.phone.value=m.phone||"";
+ $("order-form").elements.garment.value=(m.gender==="women"?"Women's ":"")+String(m.garmentType||"").replace(/^./,x=>x.toUpperCase())+" · Made to measure";
+ $("order-form").elements.notes.value=["Measurement profile v"+(m.version||1)+" ("+(m.unit||"cm")+")",...Object.entries(m.values||{}).map(([k,v])=>k+": "+v),m.notes||""].filter(Boolean).join("\n");
+ $("order-measurement-notice").textContent="Loaded "+m.customerName+" · "+m.garmentType+" · version "+(m.version||1);
+ showTab("orders");
+}
+renderMeasurementFields();
+$("measurement-gender").addEventListener("change",renderMeasurementFields);
+$("measurement-garment").addEventListener("change",renderMeasurementFields);
+$("measurement-search").addEventListener("input",renderMeasurements);
+$("refresh-measurements").addEventListener("click",loadMeasurements);
+$("load-order-measurement").addEventListener("click",()=>{const id=$("order-measurement-source").value;if(id)useMeasurement(id);else $("order-measurement-notice").textContent="Measurement profile ရွေးပါ။"});
+$("measurement-reset").addEventListener("click",()=>{$("measurement-form").reset();renderMeasurementFields();$("measurement-notice").textContent=""});
+$("measurement-form").addEventListener("submit",async e=>{
+ e.preventDefault();const f=e.currentTarget,b=f.querySelector('[type="submit"]'),customerName=f.elements.customerName.value.trim(),gender=f.elements.gender.value,garmentType=f.elements.garmentType.value,unit=f.elements.unit.value;
+ const values={};document.querySelectorAll("[data-measurement-key]").forEach(el=>{if(el.value.trim()!=="")values[el.dataset.measurementKey]=Number(el.value)});
+ if(!customerName||!Object.keys(values).length){$("measurement-notice").textContent="Customer name နဲ့ measurement အနည်းဆုံးတစ်ခု ဖြည့်ပါ။";return}
+ const previous=measurements.filter(m=>m.customerName.toLowerCase()===customerName.toLowerCase()&&m.garmentType===garmentType&&m.gender===gender).sort((a,b)=>(Number(b.version)||1)-(Number(a.version)||1))[0];
+ const d={customerName,phone:f.elements.phone.value.trim(),gender,garmentType,unit,values,notes:f.elements.notes.value.trim(),version:(Number(previous?.version)||0)+1,previousProfileId:previous?.id||null,createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+ b.disabled=true;try{const ref=await addDoc(collection(db,"measurements"),d);measurements.unshift({id:ref.id,...d,createdAt:new Date()});renderMeasurements();refreshMeasurementOptions();$("measurement-notice").textContent="Measurement profile v"+d.version+" သိမ်းပြီးပါပြီ။ အရင် version ကိုလည်း ထိန်းသိမ်းထားပါတယ်။";f.reset();renderMeasurementFields()}catch(err){$("measurement-notice").textContent="သိမ်းမရပါ: "+err.message}finally{b.disabled=false}
+});
 async function loadCalculations(){
  try{const snap=await getDocs(collection(db,"calculations"));calculations=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(dateOf(b.createdAt)?.getTime()||0)-(dateOf(a.createdAt)?.getTime()||0));renderCalculations();refreshCalculationSources()}
  catch(e){$("calculation-save-notice").textContent="Calculation register မရယူနိုင်ပါ: "+e.message}
@@ -217,7 +276,7 @@ function renderOrders(){
 $("order-form").addEventListener("submit",async e=>{
  e.preventDefault();const f=e.currentTarget,b=f.querySelector('[type="submit"]'),calc=calculateOrder(),d={orderNumber:f.elements.orderNumber.value.trim()||makeVoucherCode("BH"),customerName:f.elements.customerName.value.trim(),customerEmail:f.elements.customerEmail.value.trim(),customerUid:f.elements.customerUid.value,phone:f.elements.phone.value.trim(),garment:f.elements.garment.value.trim(),notes:f.elements.notes.value.trim(),...calc,status:"received",createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
  if(!d.customerName||!d.garment){$("orders-error").textContent="Customer နဲ့ Garment အမည် ဖြည့်ပါ။";return}
- b.disabled=true;try{const ref=await addDoc(collection(db,"orders"),d);if(d.customerUid){const body="သင့် "+d.garment+" Order ကို Atelier မှ လက်ခံရရှိပါပြီ။ Order No. "+d.orderNumber;await addDoc(collection(db,"users",d.customerUid,"notifications"),{type:"order",title:"Order received",body,relatedId:ref.id,createdAt:serverTimestamp(),readAt:null});await addDoc(collection(db,"users",d.customerUid,"history"),{type:"order",title:"Order received · "+d.orderNumber,description:body,relatedId:ref.id,status:"received",createdAt:serverTimestamp()})}orders.unshift({id:ref.id,...d});renderOrders();f.reset();$("order-quantity").value="1";["order-unit-price","order-fabric-cost","order-labour-cost","order-discount","order-deposit"].forEach(id=>$(id).value="0");calculateOrder();$("orders-error").textContent="Order သိမ်းဆည်းပြီးပါပြီ။"+(d.customerUid?" Customer ထံ Notification ပို့ပြီးပါပြီ။":" Customer Account မရွေးထားသဖြင့် Notification မပို့နိုင်ပါ။")}catch(err){$("orders-error").textContent="Order မသိမ်းနိုင်ပါ: "+err.message}finally{b.disabled=false}
+ b.disabled=true;try{const ref=await addDoc(collection(db,"orders"),d);if(d.customerUid){const body="သင့် "+d.garment+" Order ကို Atelier မှ လက်ခံရရှိပါပြီ။ Order No. "+d.orderNumber;await addDoc(collection(db,"users",d.customerUid,"notifications"),{type:"order",title:"Order received",body,relatedId:ref.id,createdAt:serverTimestamp(),readAt:null});await addDoc(collection(db,"users",d.customerUid,"history"),{type:"order",title:"Order received · "+d.orderNumber,description:body,relatedId:ref.id,status:"received",createdAt:serverTimestamp()})}orders.unshift({id:ref.id,...d});renderOrders();refreshCalculationSources();f.reset();$("order-quantity").value="1";["order-unit-price","order-fabric-cost","order-labour-cost","order-discount","order-deposit"].forEach(id=>$(id).value="0");calculateOrder();$("orders-error").textContent="Order သိမ်းဆည်းပြီးပါပြီ။"+(d.customerUid?" Customer ထံ Notification ပို့ပြီးပါပြီ။":" Customer Account မရွေးထားသဖြင့် Notification မပို့နိုင်ပါ။")}catch(err){$("orders-error").textContent="Order မသိမ်းနိုင်ပါ: "+err.message}finally{b.disabled=false}
 });
 function fillOrderCustomers(){const s=$("order-customer-uid");if(!s)return;const customers=[...new Map(inquiries.filter(x=>x.uid).map(x=>[x.uid,x])).values()];s.innerHTML='<option value="">မချိတ်ဆက်ရသေးပါ</option>'+customers.map(x=>'<option value="'+esc(x.uid)+'">'+esc(x.name||x.email||x.uid)+' · '+esc(x.email||"")+'</option>').join("")}
 function renderOverview(){const messages=inquiries.filter(x=>!isAppt(x)),appts=inquiries.filter(isAppt);$("stat-messages").textContent=messages.length;$("stat-unread").textContent=messages.filter(x=>!x.readAt).length;$("stat-pending").textContent=appts.filter(x=>(x.status||"pending")==="pending").length;$("stat-products").textContent=products.filter(x=>x.published!==false).length;const recent=[...inquiries].slice(0,5);$("recent-activity").innerHTML=recent.length?recent.map(x=>'<article class="item"><div><h3>'+esc(x.name||"Customer")+' <span class="pill">'+(isAppt(x)?"Appointment":"Enquiry")+'</span></h3><p>'+esc(x.service||"General enquiry")+' · '+esc(dateLabel(x.createdAt))+'</p></div></article>').join(""):'<div class="empty">No activity yet.</div>'}
