@@ -112,3 +112,10 @@ footer{background:#041426;color:#b9c1ca}
 @media(max-width:600px){.booking-two{grid-template-columns:1fr;gap:0}.appointment-panel{padding:25px 20px}.portfolio-grid{grid-template-columns:1fr}.portfolio-grid img{height:360px}.fabric-swatches{grid-template-columns:1fr 1fr}}
 
 .slot-hint{display:block;color:#8a7858;font-size:10px;margin-top:-8px}.appointment-panel select:disabled{opacity:.65;cursor:wait}
+
+/* Persistent premium navigation */
+html{scroll-padding-top:104px}.header{transition:box-shadow .3s ease,background .3s ease}.header.is-scrolled{box-shadow:0 12px 34px rgba(8,29,53,.13);background:rgba(248,246,240,.97)}
+@media(max-width:720px){.header{position:sticky;top:0}.nav{z-index:110}}
+
+.brand-logo{width:58px;height:58px;object-fit:contain;display:block;flex:0 0 auto}.brand{gap:12px}
+@media(max-width:720px){.brand-logo{width:48px;height:48px}}
