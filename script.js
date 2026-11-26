@@ -15,7 +15,7 @@ const bookingForm=document.getElementById("appointment-form");
 if(bookingForm){
  const stages=[...bookingForm.querySelectorAll(".booking-stage")],stepLabel=document.getElementById("booking-step-label"),progress=document.getElementById("booking-progress-fill");
  const showStage=n=>{stages.forEach((el,i)=>el.classList.toggle("is-active",i===n));stepLabel.textContent=(n+1).toString().padStart(2,"0")+" / 02";progress.style.width=n===0?"50%":"100%";};
- bookingForm.querySelector("[data-booking-next]")?.addEventListener("click",()=>{const invalid=[...stages[0].querySelectorAll("select,input")].find(f=>!f.checkValidity());if(invalid){invalid.reportValidity();return;}showStage(1);});
+ bookingForm.querySelector("[data-booking-next]")?.addEventListener("click",()=>{const invalid=[...stages[0].querySelectorAll("select,input")].find(f=>!f.checkValidity());if(invalid){invalid.reportValidity();return;}const slot=bookingForm.querySelector('[name="preferredTime"]');if(slot&&(!slot.value||slot.disabled)){alert("Please choose an available appointment time.");return;}showStage(1);});
  bookingForm.querySelector("[data-booking-back]")?.addEventListener("click",()=>showStage(0));
  const date=bookingForm.querySelector('[name="preferredDate"]');if(date){const now=new Date();date.min=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);}
 }
