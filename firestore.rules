@@ -20,6 +20,14 @@ service cloud.firestore {
     && (!('preferredTime' in request.resource.data)||request.resource.data.preferredTime is string);
    allow read,update,delete: if isAdmin();
   }
+  match /products/{id} {
+   allow read: if true;
+   allow create,update,delete: if isAdmin();
+  }
+  match /siteContent/{id} {
+   allow read: if true;
+   allow create,update,delete: if isAdmin();
+  }
   match /appointments/{id} {allow read: if isAdmin();allow write: if false;}
   match /slotLocks/{id} {allow read,write: if false;}
   match /bookingRateLimits/{id} {allow read,write: if false;}
