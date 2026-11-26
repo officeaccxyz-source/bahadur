@@ -97,7 +97,7 @@ exports.createAppointment=onCall({region:REGION},async(req)=>{
 exports.listAppointments=onCall({region:REGION},async(req)=>{
  requireAdmin(req);
  const snap=await db.collection("appointments").orderBy("createdAt","desc").limit(150).get();
- return {appointments:snap.docs.map(doc=>{const x=doc.data();return {id:doc.id,name:x.name,email:x.email,phone:x.phone,service:x.service,appointmentMode:x.appointmentMode,preferredDate:x.preferredDate,preferredTime:x.preferredTime,eventDate:x.eventDate||"",partySize:x.partySize||"1",message:x.message||"",status:x.status,createdAt:x.createdAt?x.createdAt.toDate().toISOString():null,expiresAt:x.expiresAt?x.expiresAt.toDate().toISOString():null};})};
+ return {appointments:snap.docs.map(doc=>{const x=doc.data();return {id:doc.id,name:x.name,email:x.email,phone:x.phone,service:x.service,appointmentMode:x.appointmentMode,preferredDate:x.preferredDate,preferredTime:x.preferredTime,eventDate:x.eventDate||"",partySize:x.partySize||"1",message:x.message||"",status:x.status==="pending"&&x.expiresAt&&x.expiresAt.toMillis()<=Date.now()?"expired":x.status,createdAt:x.createdAt?x.createdAt.toDate().toISOString():null,expiresAt:x.expiresAt?x.expiresAt.toDate().toISOString():null};})};
 });
 exports.updateAppointmentStatus=onCall({region:REGION},async(req)=>{
  requireAdmin(req);
@@ -120,6 +120,7 @@ exports.updateAppointmentStatus=onCall({region:REGION},async(req)=>{
   }else{
    tx.update(ref,{status:"cancelled",cancelledAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()});
    if(lockSnap.exists&&lockSnap.data().appointmentId===id)tx.delete(lockRef);
+   tx.set(db.collection("mail").doc(),{to:[a.email],message:{subject:"Bahadu Bespoke — Appointment request cancelled",text:"Dear "+a.name+", your appointment request for "+a.preferredDate+" at "+a.preferredTime+" (Yangon time) has been cancelled. Please contact us if you would like to arrange another time.",html:"<p>Dear "+escapeHtml(a.name)+",</p><p>Your appointment request for <b>"+a.preferredDate+" at "+a.preferredTime+" (Yangon time)</b> has been cancelled.</p><p>Please contact info@bahadubespoke.com if you would like to arrange another time.</p><p>Bahadu Bespoke</p>"} ,createdAt:FieldValue.serverTimestamp()});
   }
  });
  return {success:true,status};
