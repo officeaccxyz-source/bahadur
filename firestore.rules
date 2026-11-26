@@ -4,11 +4,11 @@ service cloud.firestore {
   function isAdmin(){return request.auth != null && request.auth.token.admin == true;}
   function validText(field,min,max){return request.resource.data[field] is string && request.resource.data[field].size()>=min && request.resource.data[field].size()<=max;}
   match /inquiries/{id} {
-   allow create: if request.resource.data.keys().hasOnly(['name','email','phone','service','message','preferredDate','preferredTime','createdAt','type','status','readAt','appointmentMode','eventDate','partySize','suitStyle'])
+   allow create: if request.resource.data.keys().hasOnly(['name','email','phone','service','message','preferredDate','preferredTime','createdAt','type','status','readAt','appointmentMode','eventDate','partySize','suitStyle','uid'])
     && request.resource.data.keys().hasAll(['name','email','service','message','createdAt'])
     && validText('name',2,100) && validText('email',5,160) && validText('service',1,80) && validText('message',0,2000)
     && request.resource.data.createdAt==request.time
-    && (!('type' in request.resource.data)||request.resource.data.type=='appointment')
+    && (!('type' in request.resource.data)||request.resource.data.type=='appointment'||(request.resource.data.type=='message'&&request.auth!=null&&request.resource.data.uid==request.auth.uid))
     && (!('status' in request.resource.data)||request.resource.data.status=='pending')
     && (!('readAt' in request.resource.data)||request.resource.data.readAt==null)
     && (!('appointmentMode' in request.resource.data)||(request.resource.data.appointmentMode is string&&request.resource.data.appointmentMode.size()<=60))
@@ -28,7 +28,7 @@ service cloud.firestore {
    allow read: if true;
    allow create,update,delete: if isAdmin();
   }
-  match /appointments/{id} {allow read: if isAdmin();allow write: if false;}
+  match /users/{uid}/wishlist/{productId} {\n   allow read,create,update,delete: if request.auth!=null && request.auth.uid==uid;\n  }\n  match /appointments/{id} {allow read: if isAdmin();allow write: if false;}
   match /slotLocks/{id} {allow read,write: if false;}
   match /bookingRateLimits/{id} {allow read,write: if false;}
   match /mail/{id} {allow read,write: if false;}
