@@ -2,10 +2,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebas
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 const ready = !Object.values(firebaseConfig).some(v => String(v).startsWith("REPLACE_"));
+const app = ready ? initializeApp(firebaseConfig) : null;
+const db = app ? getFirestore(app) : null;
 const form = document.getElementById("inquiry-form"), status = document.getElementById("inquiry-status");
 const t=key=>window.bahaduText?.(key)||key;
 if(form&&ready){
- const db=getFirestore(initializeApp(firebaseConfig));
+
  form.addEventListener("submit",async e=>{
   e.preventDefault();const btn=form.querySelector('button[type="submit"]');btn.disabled=true;status.textContent=t("formSending");
   const fd=new FormData(form);
