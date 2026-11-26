@@ -6,7 +6,7 @@ service cloud.firestore {
   match /inquiries/{id} {
    allow create: if request.resource.data.keys().hasOnly(['name','email','phone','service','message','preferredDate','preferredTime','createdAt','type','status','readAt','appointmentMode','eventDate','partySize','suitStyle'])
     && request.resource.data.keys().hasAll(['name','email','service','message','createdAt'])
-    && validText('name',2,100) && validText('email',5,160) && validText('service',1,80) && validText('message',1,2000)
+    && validText('name',2,100) && validText('email',5,160) && validText('service',1,80) && validText('message',0,2000)
     && request.resource.data.createdAt==request.time
     && (!('type' in request.resource.data)||request.resource.data.type=='appointment')
     && (!('status' in request.resource.data)||request.resource.data.status=='pending')
