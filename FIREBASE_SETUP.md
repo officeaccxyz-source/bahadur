@@ -20,15 +20,15 @@
    ```sh
    npm install -g firebase-tools
    firebase login
-   firebase use bahadur-9189
+   firebase use bahadur-9189b
    cd functions && npm install && cd ..
    firebase deploy --only functions,firestore:rules
    ```
-   If Firebase CLI asks for a project alias, select `bahadur-9189`.
+   If Firebase CLI asks for a project alias, select `bahadur-9189b`.
 6. **Grant admin access** using a service account with Firebase Authentication Admin privileges. Download its JSON key securely outside the repository, then:
    ```sh
    cd functions
-   GOOGLE_APPLICATION_CREDENTIALS="/secure/path/service-account.json" FIREBASE_PROJECT_ID="bahadur-9189" node scripts/set-admin-claim.js STAFF_USER_UID
+   GOOGLE_APPLICATION_CREDENTIALS="/secure/path/service-account.json" FIREBASE_PROJECT_ID="bahadur-9189b" node scripts/set-admin-claim.js STAFF_USER_UID
    ```
    Replace `STAFF_USER_UID` with the exact UID shown in Firebase Authentication. Never commit the service-account key. Ask the staff member to sign out and back in after the claim is set.
 7. Open `https://officeaccxyz-source.github.io/bahadur/admin.html`, sign in as the authorised staff user, and confirm/cancel requests from the dashboard.
