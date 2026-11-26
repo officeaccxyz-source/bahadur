@@ -5,6 +5,13 @@ import { firebaseConfig } from "./firebase-config.js";
 const ready=!Object.values(firebaseConfig).some(v=>String(v).startsWith("REPLACE_"));
 const app=ready?initializeApp(firebaseConfig):null,db=app?getFirestore(app):null,functions=app?getFunctions(app,"asia-southeast1"):null;
 const t=key=>window.bahaduText?.(key)||key;
+const bookingCopy={
+ en:{loading:"${bm("loading")}",choose:"${bm("choose")}",none:"${bm("none")}",failed:"${bm("failed")}",loadError:"${bm("loadError")}",sending:"${bm("sending")}",received:"Request received.",held:"${bm("held")}",slotTaken:"This time has just been taken. Please choose another available slot.",expired:"This request cannot be completed. Please choose another available time.",fallback:"${bm("fallback")}"},
+ my:{loading:"ရနိုင်သော အချိန်များကို စစ်ဆေးနေသည်…",choose:"ရနိုင်သော အချိန်ကို ရွေးပါ",none:"ရက်ချိန်းအချိန် မရှိတော့ပါ — အခြားရက်ရွေးပါ",failed:"ရရှိနိုင်မှုကို မစစ်ဆေးနိုင်ပါ — ထပ်ကြိုးစားပါ",loadError:"လက်ရှိရနိုင်သောအချိန်ကို မရယူနိုင်ပါ။ WhatsApp မှ ဆက်သွယ်နိုင်ပါသည်။",sending:"အချိန်ကို စစ်ဆေးပြီး တောင်းဆိုချက်ပေးပို့နေသည်…",received:"ရက်ချိန်းတောင်းဆိုမှု လက်ခံရရှိပါပြီ။",held:"သင့်ရွေးချယ်ထားသောအချိန်ကို ၂၄ နာရီအထိ ယာယီထိန်းထားပါမည်။ အတည်ပြုစာရရှိမှသာ ရက်ချိန်းအတည်ဖြစ်ပါမည်။",slotTaken:"ဤအချိန်ကို အခြားသူက ရယူသွားပါပြီ။ အခြားအချိန်ရွေးပါ။",expired:"ဤတောင်းဆိုမှု သက်တမ်းကုန်သွားပါပြီ။ အခြားအချိန်ရွေးပါ။",fallback:"ရက်ချိန်းတောင်းဆိုမှု မအောင်မြင်ပါ။ အချိန်ရရှိမှုကို ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။"},
+ th:{loading:"กำลังตรวจสอบเวลาว่าง…",choose:"เลือกเวลาที่ว่าง",none:"ไม่มีเวลาว่างในวันนี้ — กรุณาเลือกวันอื่น",failed:"ไม่สามารถตรวจสอบเวลาว่างได้ — กรุณาลองอีกครั้ง",loadError:"ไม่สามารถโหลดเวลาว่างได้ โปรดลองอีกครั้งหรือติดต่อ WhatsApp",sending:"กำลังตรวจสอบช่วงเวลาและส่งคำขอ…",received:"ได้รับคำขอนัดหมายแล้ว",held:"ระบบจะพักช่วงเวลานี้ไว้ 24 ชั่วโมงระหว่างรอทีมงานตรวจสอบ การนัดหมายยังไม่ยืนยันจนกว่าจะได้รับการยืนยัน",slotTaken:"ช่วงเวลานี้ถูกจองไปแล้ว กรุณาเลือกเวลาอื่น",expired:"คำขอนี้หมดอายุแล้ว กรุณาเลือกเวลาใหม่",fallback:"ไม่สามารถส่งคำขอได้ กรุณาตรวจสอบเวลาว่างแล้วลองอีกครั้ง"}
+};
+const bm=key=>bookingCopy[window.bahaduLang?.()||"en"]?.[key]||bookingCopy.en[key];
+
 const form=document.getElementById("inquiry-form"),status=document.getElementById("inquiry-status");
 if(form&&ready)form.addEventListener("submit",async e=>{e.preventDefault();const btn=form.querySelector('button[type="submit"]');btn.disabled=true;status.textContent=t("formSending");const fd=new FormData(form);try{await addDoc(collection(db,"inquiries"),{name:String(fd.get("name")||"").trim(),email:String(fd.get("email")||"").trim(),phone:String(fd.get("phone")||"").trim(),preferredDate:String(fd.get("preferredDate")||"").trim(),preferredTime:String(fd.get("preferredTime")||"").trim(),service:String(fd.get("service")||"").trim(),message:String(fd.get("message")||"").trim(),createdAt:serverTimestamp()});form.reset();status.textContent=t("formSuccess")}catch(err){console.error(err);status.textContent=t("formError")}finally{btn.disabled=false}});
 else if(form&&status)status.textContent=t("formPending");
@@ -31,8 +38,8 @@ if(booking&&ready){
   try{
    const result=await createBooking({name:fd.get("name"),email:fd.get("email"),phone:fd.get("phone"),service:fd.get("service"),appointmentMode:fd.get("appointmentMode"),preferredDate:fd.get("preferredDate"),preferredTime:fd.get("preferredTime"),eventDate:fd.get("eventDate"),partySize:fd.get("partySize"),message:fd.get("message")});
    booking.reset();booking.querySelectorAll(".booking-stage").forEach((el,i)=>el.classList.toggle("is-active",i===0));document.getElementById("booking-step-label").textContent="01 / 02";document.getElementById("booking-progress-fill").style.width="50%";
-   time.innerHTML=initial;time.disabled=true;bookingStatus.textContent="Request received. Reference: "+result.data.appointmentId+". Your slot is held for up to 24 hours while the atelier reviews it. It is not confirmed until you receive confirmation.";
-  }catch(err){console.error(err);bookingStatus.textContent=err.message||"Unable to request this slot. Please refresh availability and try again.";if(date.value)await refreshSlots();}
+   time.innerHTML=initial;time.disabled=true;bookingStatus.textContent="${bm("received")} Reference: "+result.data.appointmentId+". Your slot is held for up to 24 hours while the atelier reviews it. It is not confirmed until you receive confirmation.";
+  }catch(err){console.error(err);bookingStatus.textContent=err.code==="functions/already-exists"?bm("slotTaken"):err.code==="functions/deadline-exceeded"?bm("expired"):err.message||"Unable to request this slot. Please refresh availability and try again.";if(date.value)await refreshSlots();}
   finally{submit.disabled=false}
  });
 }else if(booking&&bookingStatus)bookingStatus.textContent=t("formPending");
