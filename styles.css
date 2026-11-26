@@ -119,3 +119,59 @@ html{scroll-padding-top:104px}.header{transition:box-shadow .3s ease,background 
 
 .brand-logo{width:58px;height:58px;object-fit:contain;display:block;flex:0 0 auto}.brand{gap:12px}
 @media(max-width:720px){.brand-logo{width:48px;height:48px}}
+
+
+/* Myanmar typography: prevent stacked/overlapping Burmese glyphs */
+html[lang="my"] body,
+html[lang="my"] button,
+html[lang="my"] input,
+html[lang="my"] select,
+html[lang="my"] textarea{
+  font-family:"Noto Sans Myanmar","Myanmar Text",sans-serif;
+  letter-spacing:0;
+}
+html[lang="my"] body{line-height:1.85}
+html[lang="my"] .nav,
+html[lang="my"] .nav a,
+html[lang="my"] .language-switch button,
+html[lang="my"] .button,
+html[lang="my"] .hero-copy,
+html[lang="my"] .intro-copy>p,
+html[lang="my"] .story-content>p,
+html[lang="my"] .section-heading>p,
+html[lang="my"] .collection-card>p,
+html[lang="my"] .process-grid p,
+html[lang="my"] .contact-info p,
+html[lang="my"] .contact-lead>p,
+html[lang="my"] .inquiry-form label,
+html[lang="my"] .inquiry-form input,
+html[lang="my"] .inquiry-form select,
+html[lang="my"] .inquiry-form textarea,
+html[lang="my"] .package-card>p,
+html[lang="my"] .package-card ul,
+html[lang="my"] .service-model-grid p,
+html[lang="my"] .faq-list p,
+html[lang="my"] .booking-main,
+html[lang="my"] .booking-aside,
+html[lang="my"] .booking-main label,
+html[lang="my"] .booking-main input,
+html[lang="my"] .booking-main select,
+html[lang="my"] .booking-main textarea{
+  line-height:1.9;
+  letter-spacing:0;
+}
+html[lang="my"] h1,
+html[lang="my"] h2,
+html[lang="my"] h3,
+html[lang="my"] h4,
+html[lang="my"] .collection-meta h3,
+html[lang="my"] .product-meta h3,
+html[lang="my"] .package-card h3,
+html[lang="my"] .booking-stage h3{
+  line-height:1.65;
+  letter-spacing:0;
+}
+html[lang="my"] .hero h1{line-height:1.55}
+html[lang="my"] .brand small{letter-spacing:.08em}
+.brand-logo{display:block;width:46px;height:46px;object-fit:contain}
+@media(max-width:720px){.brand-logo{width:40px;height:40px}}
