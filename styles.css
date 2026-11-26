@@ -2,3 +2,61 @@
 @media(max-width:1000px){.header{padding:0 4%;gap:12px}.nav{gap:15px}.nav-cta{padding:11px 12px}.language-switch button{padding:7px 6px}.section-pad{padding:88px 7%}.process-grid{grid-template-columns:repeat(2,1fr);row-gap:35px}.contact{gap:7%}}
 @media(max-width:720px){.header{height:74px;padding:0 5%;position:absolute}.brand{font-size:12px;letter-spacing:.14em}.brand-mark{height:36px;width:36px;font-size:29px}.menu-toggle{display:flex;border:0;background:transparent;flex-direction:column;gap:5px;padding:8px;order:3}.menu-toggle span{width:22px;height:1px;background:#222}.language-switch{order:2}.nav{display:none;position:absolute;top:74px;left:0;right:0;background:#f5f2eb;padding:24px 7% 30px;flex-direction:column;align-items:flex-start;gap:21px}.nav.open{display:flex}.hero{min-height:600px;height:90svh}.hero-image{background-position:62% center}.hero-content{top:27%;left:7%;right:7%}.hero h1{font-size:clamp(57px,14vw,76px)}.hero-copy{font-size:13px}.hero-note{left:7%;right:7%;font-size:8px}.section-pad{padding:76px 7%}.intro{grid-template-columns:1fr;gap:26px}.intro-copy h2,.section-heading h2,.story-content h2,.process h2,.testimonial h2{font-size:clamp(43px,11vw,54px)}.section-heading{display:block;margin-bottom:34px}.section-heading>p{margin-top:14px}.collection-grid{grid-template-columns:1fr;gap:32px}.collection-image{height:min(112vw,480px)}.story{grid-template-columns:1fr;gap:34px}.story-photo{height:95vw;max-height:450px}.story-content{padding-bottom:5px}.process-grid{grid-template-columns:1fr;gap:26px}.process h2{margin-bottom:40px}.process-grid p{max-width:420px}.testimonial blockquote{font-size:21px;margin:32px auto 22px}.contact{grid-template-columns:1fr;gap:35px;padding-top:75px;padding-bottom:75px}.contact h2{font-size:clamp(44px,11vw,56px)}.contact-info{padding-top:0}.inquiry-form .form-row{grid-template-columns:1fr}footer{padding:24px 7%;flex-wrap:wrap}footer>span{order:3;width:100%;line-height:1.7}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.hero-image{animation:none}}
+
+
+/* Bahadu Bespoke — Midnight Navy & Champagne Gold luxury palette */
+:root{
+  --ink:#10243b;
+  --cream:#f3efe6;
+  --paper:#f8f6f0;
+  --muted:#a9a18f;
+  --gold:#c5a15e;
+}
+body{background:var(--paper);color:var(--ink)}
+.header{background:#f8f6f0}
+.brand-mark{border-color:var(--gold);color:#b18b45}
+.brand small{color:#8b8375}
+.nav-cta{border-color:#b89a62;color:#10243b}
+.language-switch{border-color:#d8c9a9}
+.language-switch button{color:#536174}
+.language-switch button[aria-pressed=true]{background:#0b2038;color:#f8f3e8}
+.hero{background:#071a30}
+.hero-shade{background:linear-gradient(90deg,rgba(4,17,33,.88),rgba(5,22,42,.52) 58%,rgba(5,22,42,.16)),linear-gradient(0deg,rgba(4,17,33,.48),transparent 55%)}
+.hero h1 em,h2 em{color:#d2b477}
+.eyebrow{color:#9d875c}
+.eyebrow.light{color:#d3b779}
+.button{border-color:rgba(210,183,119,.72)}
+.button-light:hover{background:#d2b477;color:#071a30}
+.hero-note{color:#d8c9aa}
+.intro{background:#f8f6f0}
+.intro-label{color:#9b895f}
+.intro-copy>p:not(.eyebrow),.story-content>p:not(.eyebrow){color:#626d7b}
+.text-link{border-color:#b99a5b;color:#243b56}
+.collections{background:#eee9df}
+.section-heading>p{color:#697585}
+.collection-meta h3{color:#10243b}
+.collection-meta span{color:#9c8456}
+.collection-card>p{color:#697585}
+.story{background:#0a2039;color:#f4efe5}
+.story-content>p:not(.eyebrow){color:#c1c7ce}
+.process{background:#f8f6f0}
+.process-grid article{border-color:#d6cbb6}
+.process-grid article>span{color:#ad8e50}
+.process-grid p{color:#687382}
+.testimonial{background:#eee9df}
+.testimonial blockquote{color:#34475c}
+.testimonial-note{color:#8b806c}
+.contact{background:#081d35;color:#f4efe5}
+.contact-lead>p:not(.eyebrow){color:#c1c8d0}
+.contact-info p{color:#d0d4d8}
+.contact-info .contact-label{color:#d1b16f}
+.inquiry-form label{color:#d5d8dc}
+.inquiry-form input,.inquiry-form select,.inquiry-form textarea{border-color:#52647a;color:#f4efe5;background:rgba(255,255,255,.025)}
+.inquiry-form input:focus,.inquiry-form select:focus,.inquiry-form textarea:focus{outline-color:#d0ae68}
+.inquiry-form #inquiry-status{color:#e0c17f}
+footer{background:#041426;color:#b9c1ca}
+.brand-footer{color:#f0e8d8}
+@media(max-width:720px){
+  .menu-toggle span{background:#10243b}
+  .nav{background:#f8f6f0}
+}
