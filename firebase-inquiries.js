@@ -19,7 +19,6 @@ if(form&&ready){
 
 const bookingForm=document.getElementById("appointment-form"),bookingStatus=document.getElementById("booking-status");
 if(bookingForm&&ready){
- const db=getFirestore(initializeApp(firebaseConfig));
  bookingForm.addEventListener("submit",async e=>{
   e.preventDefault();const submit=bookingForm.querySelector('button[type="submit"]');if(!bookingForm.reportValidity())return;
   submit.disabled=true;bookingStatus.textContent=window.bahaduText?.("formSending")||"Sending…";
