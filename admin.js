@@ -91,8 +91,9 @@ function renderMessages(){
   try{
    await updateDoc(doc(db,"inquiries",item.id),{status,readAt:new Date(),statusUpdatedAt:serverTimestamp()});
    item.status=status;item.readAt=new Date();item.statusUpdatedAt=new Date();
-   const title=status==="confirmed"?"Appointment confirmed":"Appointment cancelled";
-   const body=status==="confirmed"?"သင့်ရက်ချိန်းကို အတည်ပြုပြီးပါပြီ။ "+(item.preferredDate||"")+" "+(item.preferredTime||""):"သင့်ရက်ချိန်းတောင်းဆိုမှုကို ပယ်ဖျက်လိုက်ပါပြီ။ အချိန်အသစ်ပြန်လည်ညှိနှိုင်းရန် Atelier ကို ဆက်သွယ်နိုင်ပါသည်။";
+   const voucher=item.voucherCode||("AP-"+String(item.id).slice(0,8).toUpperCase());
+   const title=(status==="confirmed"?"Appointment confirmed":"Appointment cancelled")+" · "+voucher;
+   const body="Voucher: "+voucher+" · "+(status==="confirmed"?"သင့်ရက်ချိန်းကို အတည်ပြုပြီးပါပြီ။ ":"သင့်ရက်ချိန်းတောင်းဆိုမှုကို ပယ်ဖျက်လိုက်ပါပြီ။ ") +(item.preferredDate||"")+" "+(item.preferredTime||"")+(status==="cancelled"?" အချိန်အသစ်ပြန်လည်ညှိနှိုင်းရန် Atelier ကို ဆက်သွယ်နိုင်ပါသည်။":"");
    if(item.uid){
     await addDoc(collection(db,"users",item.uid,"notifications"),{type:"appointment",title,body,relatedId:item.id,createdAt:serverTimestamp(),readAt:null});
     await addDoc(collection(db,"users",item.uid,"history"),{type:"appointment",title,description:body,relatedId:item.id,status,createdAt:serverTimestamp()});
