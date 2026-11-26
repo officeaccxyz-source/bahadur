@@ -28,7 +28,9 @@ service cloud.firestore {
    allow read: if true;
    allow create,update,delete: if isAdmin();
   }
-  match /users/{uid}/wishlist/{productId} {\n   allow read,create,update,delete: if request.auth!=null && request.auth.uid==uid;\n  }\n  match /appointments/{id} {allow read: if isAdmin();allow write: if false;}
+  match /users/{uid}/wishlist/{productId} {
+   allow read,create,update,delete: if request.auth != null && request.auth.uid == uid;
+  }\n  match /appointments/{id} {allow read: if isAdmin();allow write: if false;}
   match /slotLocks/{id} {allow read,write: if false;}
   match /bookingRateLimits/{id} {allow read,write: if false;}
   match /mail/{id} {allow read,write: if false;}
