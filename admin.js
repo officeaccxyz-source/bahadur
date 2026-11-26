@@ -40,7 +40,7 @@ function startAdminLive(){
     const i=inquiries.findIndex(x=>x.id===row.id);if(i>=0){inquiries[i]=row;changed=true}
    }else if(change.type==="removed"){inquiries=inquiries.filter(x=>x.id!==row.id);changed=true}
   });
-  if(changed){inquiries.sort((a,b)=>(dateOf(b.createdAt)?.getTime()||0)-(dateOf(a.createdAt)?.getTime()||0));renderMessages();renderAppointments();renderOverview()}
+  if(changed){inquiries.sort((a,b)=>(dateOf(b.createdAt)?.getTime()||0)-(dateOf(a.createdAt)?.getTime()||0));fillOrderCustomers();renderMessages();renderAppointments();renderOverview()}
  },err=>{$("admin-live-status").textContent="Live updates paused";console.error(err)});
  stopAdminNoticeLive=onSnapshot(collection(db,"adminNotifications"),snap=>{
   const rows=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(dateOf(b.createdAt)?.getTime()||0)-(dateOf(a.createdAt)?.getTime()||0));
