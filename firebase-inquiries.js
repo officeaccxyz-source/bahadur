@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";\nimport { getAuth } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { firebaseConfig } from "./firebase-config.js";
 const ready=!Object.values(firebaseConfig).some(v=>String(v).startsWith("REPLACE_"));
-const app=ready?initializeApp(firebaseConfig):null,db=app?getFirestore(app):null;
+const app=ready?initializeApp(firebaseConfig):null,db=app?getFirestore(app):null,auth=app?getAuth(app):null;
 const t=key=>window.bahaduText?.(key)||key;
 const bookingCopy={
  en:{loading:"Checking available times…",choose:"Choose an available time",none:"No times available — choose another date",failed:"Availability unavailable — try again",loadError:"Could not load live availability. Please retry or contact us on WhatsApp.",sending:"Checking the slot and sending your request…",received:"Request received.",held:"Your request is sent to the atelier for review. The appointment is not confirmed until the team contacts you.",slotTaken:"This time has just been taken. Please choose another available slot.",expired:"This request has expired. Please choose another available time.",fallback:"Unable to request this slot. Please refresh availability and try again."},
@@ -35,7 +35,7 @@ if(booking&&ready){
   const fd=new FormData(booking);
   try{
    await addDoc(collection(db,"inquiries"),{
-    type:"appointment",status:"pending",readAt:null,
+    type:"appointment",status:"pending",readAt:null,...(auth?.currentUser?{uid:auth.currentUser.uid}:{}),
     name:String(fd.get("name")||"").trim(),email:String(fd.get("email")||"").trim(),
     phone:String(fd.get("phone")||"").trim(),service:String(fd.get("service")||"").trim(),
     appointmentMode:String(fd.get("appointmentMode")||"").trim(),
