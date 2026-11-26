@@ -1,0 +1,10 @@
+{
+  "name": "bahadu-admin-claim-utility",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2"
+  }
+}
